@@ -70,9 +70,10 @@ You can run the service with PostgreSQL using Docker Compose:
 docker-compose up --build
 ```
 
-This will start two services:
-app: Spring Boot application on port 8080
-db: PostgreSQL database on port 5432
+This will start:
+Card management service
+PostgreSQL database
+Kafka
 
 ### Environment Variables
 
