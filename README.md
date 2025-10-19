@@ -1,6 +1,6 @@
 # Card Management Service
 
-A Spring Boot 3.4.6 application for managing card creation, built with Java 21, PostgreSQL, Hibernate, and Querydsl. The
+A Spring Boot application for managing card creation, built with Java 21, PostgreSQL, Hibernate, and Querydsl. The
 service includes REST APIs, Swagger documentation, and Docker support for easy setup.
 
 ## Features
@@ -10,7 +10,7 @@ service includes REST APIs, Swagger documentation, and Docker support for easy s
   the external RESTful API endpoint.
 - Remove a client from the database by OIB.
 - API documentation available via **Swagger UI**
-- Docker Compose for (includes PostgreSQL and Kafka)
+- Docker Compose (includes PostgreSQL and Kafka)
 
 ### Observability
 
@@ -125,6 +125,16 @@ The raw OpenAPI specification is available at:
 http://localhost:8080/v3/api-docs
 
 ## Testing
+
+The project includes unit and integration tests covering key functionality:
+
+- ClientService – tests client creation, retrieval, deletion, and card status updates, including edge cases for
+  non-existing clients and invalid status transitions.
+- ClientResourceService – verifies database operations, handling of duplicate OIBs, and proper exception handling.
+- ClientMapper – ensures correct mapping between ClientRequest, Client entity, and ClientResponse.
+- Kafka Integration – confirms that card status messages from Kafka are properly processed and delegated to the service.
+- OIB Validator – checks the validity of OIB format and checksum.
+- Internationalization – verifies that messages are correctly translated based on the locale (Croatian / English).
 
 ### Run Tests
 
