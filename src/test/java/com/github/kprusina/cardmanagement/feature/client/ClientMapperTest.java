@@ -16,7 +16,7 @@ class ClientMapperTest {
   @Autowired private ClientMapper mapper;
 
   @Test
-  void toEntity_ShouldMapRequestToEntity() {
+  void mapsRequestToEntity() {
     ClientRequest request = new ClientRequest("John", "Doe", "12345678901", "PENDING");
 
     Client entity = mapper.toEntity(request);
@@ -28,7 +28,7 @@ class ClientMapperTest {
   }
 
   @Test
-  void toResponse_ShouldMapEntityToResponse() {
+  void mapsEntityToResponse() {
     Client client = new Client();
     client.setFirstName("John");
     client.setLastName("Doe");

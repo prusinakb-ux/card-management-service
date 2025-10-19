@@ -5,6 +5,7 @@ import static org.mockito.Mockito.*;
 
 import com.github.kprusina.cardmanagement.client.CardApiClient;
 import com.github.kprusina.cardmanagement.enumeration.CardStatus;
+import com.github.kprusina.cardmanagement.exception.SoftException;
 import com.github.kprusina.cardmanagement.feature.client.mapper.ClientMapper;
 import com.github.kprusina.cardmanagement.feature.client.request.ClientRequest;
 import com.github.kprusina.cardmanagement.feature.client.response.ClientResponse;
@@ -21,11 +22,8 @@ import org.springframework.http.ResponseEntity;
 class ClientServiceTest {
 
   @Mock private ClientResourceService clientResourceService;
-
   @Mock private ClientMapper mapper;
-
   @Mock private CardApiClient cardApiClient;
-
   @InjectMocks private ClientService clientService;
 
   private ClientRequest request;
@@ -33,11 +31,9 @@ class ClientServiceTest {
   private ClientResponse response;
 
   @BeforeEach
-  void setup() {
+  void setUp() {
     MockitoAnnotations.openMocks(this);
-
     request = new ClientRequest("John", "Doe", "12345678901", "PENDING");
-
     client =
         Client.builder()
             .firstName("John")
@@ -45,18 +41,17 @@ class ClientServiceTest {
             .oib("12345678901")
             .status(CardStatus.PENDING)
             .build();
-
     response =
         ClientResponse.builder()
             .firstName("John")
             .lastName("Doe")
             .oib("12345678901")
-            .status(CardStatus.PENDING.name())
+            .status("PENDING")
             .build();
   }
 
   @Test
-  void createClient_shouldReturnMappedResponse() {
+  void createsClientAndReturnsMappedResponse() {
     when(mapper.toEntity(request)).thenReturn(client);
     when(clientResourceService.save(client)).thenReturn(client);
     when(mapper.toResponse(client)).thenReturn(response);
@@ -69,33 +64,42 @@ class ClientServiceTest {
   }
 
   @Test
-  void getClientByOib_existingClient_shouldCallApiAndReturnResponse() {
+  void propagatesSoftExceptionWhenCreateFails() {
+    when(mapper.toEntity(request)).thenReturn(client);
+    when(clientResourceService.save(client))
+        .thenThrow(
+            new SoftException(
+                HttpStatus.CONFLICT, "DUPLICATE", "12345678901", "client.duplicateOib"));
+
+    assertThrows(SoftException.class, () -> clientService.createClient(request));
+  }
+
+  @Test
+  void returnsOkAndTriggersCardApiWhenClientExists() {
     when(clientResourceService.findByOptionalOib("12345678901")).thenReturn(Optional.of(client));
     when(mapper.toResponse(client)).thenReturn(response);
     when(mapper.toRequest(client)).thenReturn(request);
 
     ResponseEntity<ClientResponse> result = clientService.getClientByOib("12345678901");
 
-    assertNotNull(result);
     assertEquals(HttpStatus.OK, result.getStatusCode());
     assertEquals("John", Objects.requireNonNull(result.getBody()).getFirstName());
     verify(cardApiClient).createCard(request);
   }
 
   @Test
-  void getClientByOib_nonExistingClient_shouldReturnNoContent() {
+  void returnsNoContentWhenClientDoesNotExist() {
     when(clientResourceService.findByOptionalOib("12345678901")).thenReturn(Optional.empty());
 
     ResponseEntity<ClientResponse> result = clientService.getClientByOib("12345678901");
 
-    assertNotNull(result);
     assertEquals(HttpStatus.NO_CONTENT, result.getStatusCode());
     assertNull(result.getBody());
     verify(cardApiClient, never()).createCard(any());
   }
 
   @Test
-  void updateCardStatus_existingClient_validStatus_shouldUpdate() {
+  void updatesCardStatusWhenValidAndDifferent() {
     when(clientResourceService.findByOptionalOib("12345678901")).thenReturn(Optional.of(client));
 
     clientService.updateCardStatus("12345678901", "APPROVED");
@@ -105,17 +109,27 @@ class ClientServiceTest {
   }
 
   @Test
-  void updateCardStatus_existingClient_invalidStatus_shouldLogWarning() {
+  void doesNothingWhenStatusIsInvalid() {
     when(clientResourceService.findByOptionalOib("12345678901")).thenReturn(Optional.of(client));
 
-    clientService.updateCardStatus("12345678901", "INVALID_STATUS");
+    clientService.updateCardStatus("12345678901", "INVALID");
 
     assertEquals(CardStatus.PENDING, client.getStatus());
     verify(clientResourceService, never()).save(client);
   }
 
   @Test
-  void updateCardStatus_nonExistingClient_shouldLogWarning() {
+  void doesNothingWhenStatusIsSame() {
+    client.setStatus(CardStatus.APPROVED);
+    when(clientResourceService.findByOptionalOib("12345678901")).thenReturn(Optional.of(client));
+
+    clientService.updateCardStatus("12345678901", "APPROVED");
+
+    verify(clientResourceService, never()).save(client);
+  }
+
+  @Test
+  void doesNothingWhenClientDoesNotExist() {
     when(clientResourceService.findByOptionalOib("12345678901")).thenReturn(Optional.empty());
 
     clientService.updateCardStatus("12345678901", "APPROVED");
@@ -124,7 +138,7 @@ class ClientServiceTest {
   }
 
   @Test
-  void deleteClient_shouldCallResourceService() {
+  void deletesClientByOib() {
     clientService.deleteClient("12345678901");
 
     verify(clientResourceService).deleteByOib("12345678901");
