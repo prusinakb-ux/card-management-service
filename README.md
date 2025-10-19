@@ -6,8 +6,7 @@ service includes REST APIs, Swagger documentation, and Docker support for easy s
 ## Features
 
 - Add new clients with attributes firstName, lastName, OIB, and cardStatus to the database.
-- Fetch a client by OIB; returns client data if exists. If the client exists, automatically forward their information to
-  the external RESTful API endpoint.
+- Fetch a client by OIB and, if found, forward their information to an external REST API; otherwise, do nothing.
 - Remove a client from the database by OIB.
 - API documentation available via **Swagger UI**
 - Docker Compose (includes PostgreSQL and Kafka)
