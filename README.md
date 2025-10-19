@@ -12,7 +12,7 @@ service includes REST APIs, Swagger documentation, and Docker support for easy s
 - API documentation available via **Swagger UI**
 - Docker Compose for (includes PostgreSQL and Kafka)
 
-## Observability
+### Observability
 
 - Centralized logging using AOP:
     - Logs method entry and exit for all service methods.
