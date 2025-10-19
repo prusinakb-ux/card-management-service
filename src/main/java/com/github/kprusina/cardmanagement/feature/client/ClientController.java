@@ -21,7 +21,12 @@ public class ClientController {
   @ApiResponses({
     @ApiResponse(
         responseCode = "201",
-        description = "Client saved and card request created successfully.")
+        description = "Client saved and card request created successfully."),
+    @ApiResponse(responseCode = "400", description = "Invalid request data (validation failed)."),
+    @ApiResponse(responseCode = "409", description = "Client with this OIB already exists."),
+    @ApiResponse(
+        responseCode = "500",
+        description = "Unexpected error occurred. Please try again later.")
   })
   @PostMapping("/card-request")
   public ClientResponse createNewCard(@Valid @RequestBody ClientRequest request) {
@@ -42,9 +47,8 @@ public class ClientController {
       summary = "Delete a client by OIB",
       description = "Deletes the client with the given OIB. ")
   @ApiResponses({
-    @ApiResponse(
-        responseCode = "204",
-        description = "Client deleted successfully or did not exist.")
+    @ApiResponse(responseCode = "204", description = "Client deleted successfully."),
+    @ApiResponse(responseCode = "404", description = "Client not found.")
   })
   @DeleteMapping("/{oib}")
   public void delete(@PathVariable String oib) {
