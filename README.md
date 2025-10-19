@@ -10,7 +10,18 @@ service includes REST APIs, Swagger documentation, and Docker support for easy s
   the external RESTful API endpoint.
 - Remove a client from the database by OIB.
 - API documentation available via **Swagger UI**
-- Docker Compose for (includes PostgreSQL)
+- Docker Compose for (includes PostgreSQL and Kafka)
+
+## Observability
+
+- Centralized logging using AOP:
+    - Logs method entry and exit for all service methods.
+    - Measures execution time for performance insight.
+    - Captures exceptions with stack traces.
+- Auditing:
+    - Tracks changes in the database (created/modified by).
+    - Currently uses a default system user for auditing.
+- Error handling with HTTP responses and translated messages.
 
 ---
 
@@ -81,6 +92,21 @@ POSTGRES_PASSWORD: postgres
 POSTGRES_DB: CLIENTS_DB
 ```
 
+Kafka:
+
+```yaml
+spring.kafka.consumer.bootstrap-servers=localhost:29092
+spring.kafka.producer.bootstrap-servers=localhost:29092
+spring.kafka.consumer.group-id=${spring.application.name}
+kafka.consumer.topic.card-status-update=card-status-update
+```
+
+External Card API:
+
+```yaml
+card.api.url=https://api.something.com/v1
+```
+
 ## API Documentation
 
 The service exposes an OpenAPI (Swagger) specification.
@@ -135,6 +161,7 @@ card.api.url=https://api.something.com/v1
 - Spring Boot 3.4.6
 - Spring Data JPA (Hibernate)
 - PostgreSQL
+- Kafka
 - Querydsl
 - Swagger / OpenAPI (springdoc)
 - Maven
